@@ -10,16 +10,11 @@ import seaborn as sns
 # Title
 st.title("🎬 Sentiment Analysis (IMDB Reviews)")
 
-# Upload dataset
-st.subheader("📂 Upload Dataset (CSV)")
-uploaded_file = st.file_uploader("Upload IMDB Dataset CSV", type=["csv"])
+# Upload file
+uploaded_file = st.file_uploader("📂 Upload IMDB Dataset CSV", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-
-    # Show data
-    st.subheader("📊 Dataset Preview")
-    st.dataframe(df.head())
 
     # Convert labels
     df['sentiment'] = df['sentiment'].map({'positive': 1, 'negative': 0})
@@ -41,45 +36,53 @@ if uploaded_file is not None:
     model = MultinomialNB()
     model.fit(X_train_tfidf, y_train)
 
-    # Prediction
     y_pred = model.predict(X_test_tfidf)
 
-    # Accuracy
-    acc = accuracy_score(y_test, y_pred)
-    st.subheader("📈 Model Accuracy")
-    st.write(f"Accuracy: {acc:.2f}")
+    # Create 2 columns
+    col1, col2 = st.columns(2)
 
-    # Classification report
-    st.subheader("📋 Classification Report")
-    st.text(classification_report(y_test, y_pred))
+    # LEFT COLUMN → Input + Dataset
+    with col1:
+        st.subheader("📊 Dataset Preview")
+        st.dataframe(df.head())
 
-    # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
+        st.subheader("✍️ Enter Review")
+        user_review = st.text_area("Type your review:")
 
-    st.subheader("📊 Confusion Matrix")
-    fig, ax = plt.subplots()
-    sns.heatmap(cm, annot=True, fmt="d",
-                xticklabels=["Negative", "Positive"],
-                yticklabels=["Negative", "Positive"],
-                ax=ax)
-    ax.set_xlabel("Predicted")
-    ax.set_ylabel("Actual")
-    ax.set_title("Confusion Matrix")
+        predict_btn = st.button("Predict Sentiment")
 
-    st.pyplot(fig)
+    # RIGHT COLUMN → Results
+    with col2:
+        st.subheader("📈 Model Performance")
 
-    # User input
-    st.subheader("✍️ Test Your Own Review")
-    user_review = st.text_area("Enter a movie review:")
+        acc = accuracy_score(y_test, y_pred)
+        st.write(f"Accuracy: {acc:.2f}")
 
-    if st.button("Predict Sentiment"):
-        if user_review.strip() == "":
-            st.warning("Please enter a review")
-        else:
-            review_vec = tfidf.transform([user_review])
-            prediction = model.predict(review_vec)[0]
+        st.subheader("📋 Classification Report")
+        st.text(classification_report(y_test, y_pred))
 
-            if prediction == 1:
-                st.success("😊 Positive Review")
+        st.subheader("📊 Confusion Matrix")
+        cm = confusion_matrix(y_test, y_pred)
+
+        fig, ax = plt.subplots()
+        sns.heatmap(cm, annot=True, fmt="d",
+                    xticklabels=["Negative", "Positive"],
+                    yticklabels=["Negative", "Positive"],
+                    ax=ax)
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("Actual")
+
+        st.pyplot(fig)
+
+        # Prediction result
+        if predict_btn:
+            if user_review.strip() == "":
+                st.warning("Please enter a review")
             else:
-                st.error("😠 Negative Review")
+                review_vec = tfidf.transform([user_review])
+                prediction = model.predict(review_vec)[0]
+
+                if prediction == 1:
+                    st.success("😊 Positive Review")
+                else:
+                    st.error("😠 Negative Review")
