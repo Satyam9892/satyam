@@ -6,42 +6,26 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-# Title
 st.title("🎬 Sentiment Analysis (IMDB Reviews)")
-
-# Upload file
 uploaded_file = st.file_uploader("📂 Upload IMDB Dataset CSV", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-
-    # Convert labels
     df['sentiment'] = df['sentiment'].map({'positive': 1, 'negative': 0})
 
     X = df['review']
     y = df['sentiment']
-
-    # Split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
-
-    # TF-IDF
     tfidf = TfidfVectorizer(stop_words="english", max_features=5000)
     X_train_tfidf = tfidf.fit_transform(X_train)
     X_test_tfidf = tfidf.transform(X_test)
-
-    # Model
     model = MultinomialNB()
     model.fit(X_train_tfidf, y_train)
 
     y_pred = model.predict(X_test_tfidf)
-
-    # Create 2 columns
     col1, col2 = st.columns(2)
-
-    # LEFT COLUMN → Input + Dataset
     with col1:
         st.subheader("📊 Dataset Preview")
         st.dataframe(df.head())
@@ -50,8 +34,6 @@ if uploaded_file is not None:
         user_review = st.text_area("Type your review:")
 
         predict_btn = st.button("Predict Sentiment")
-
-    # RIGHT COLUMN → Results
     with col2:
         st.subheader("📈 Model Performance")
 
@@ -73,8 +55,6 @@ if uploaded_file is not None:
         ax.set_ylabel("Actual")
 
         st.pyplot(fig)
-
-        # Prediction result
         if predict_btn:
             if user_review.strip() == "":
                 st.warning("Please enter a review")
